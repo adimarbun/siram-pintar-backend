@@ -29,4 +29,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/siram-pintar/siram-pintar-backend:main
+          tags: ghcr.io/adimarbun/siram-pintar-backend:main
