@@ -1,0 +1,22 @@
+name: Publish Docker image
+on:
+  push:
+    branches:
+      - main
+jobs:
+  push_to_registry:
+    name: Push Docker image to GitHub Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: News Dockefile
+        run: ls && cat Dockerfile
+      - name: Push to GitHub Packages
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          repository: siram-pintar/siram-pintar-backend
+          tag_with_ref: true
