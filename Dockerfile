@@ -1,20 +1,26 @@
-# Use the official Node.js 18 image as the base image
+# Gunakan base image resmi Node.js versi LTS
 FROM node:18
 
-# Set the working directory inside the container
+# Set environment variable
+ENV NODE_ENV=production
+
+# Tentukan direktori kerja di dalam container
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
-COPY src/package*.json ./
+# Salin file package.json dan package-lock.json ke dalam container
+COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependensi aplikasi
+RUN npm install --production
 
-# Copy the rest of the application code to the working directory
-COPY src/ ./
+# Salin semua file dari direktori lokal ke dalam container
+COPY . ./
 
-# Expose the port your Express.js app listens on (usually 3000)
+# Salin isi folder src ke dalam container (opsional jika ingin lebih spesifik)
+COPY src ./src
+
+# Expose port yang digunakan oleh aplikasi Express.js
 EXPOSE 3000
 
-# Define the command to run your application
-CMD ["node", "index.js"]
+# Perintah untuk menjalankan aplikasi
+CMD ["node", "src/index.js"]
