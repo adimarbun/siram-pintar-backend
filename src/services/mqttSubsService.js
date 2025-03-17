@@ -1,9 +1,10 @@
 const mqtt = require('mqtt');
+const DeviceService = require('./deviceService');
 
 // Connect to the broker
 // const client = mqtt.connect('mqtt://broker.hivemq.com'); // Replace with your broker URL
 
-const client = mqtt.connect('mqtt://103.127.97.2:1883'); // Replace with your broker URL
+const client = mqtt.connect('mqtt://sirampintar.site:1883'); // Replace with your broker URL
 // Event: When connected
 client.on('connect', () => {
     console.log('Connected to MQTT broker');
@@ -21,9 +22,26 @@ client.on('connect', () => {
     client.publish('home/garden/sensor', 'Hello MQTT');
 });
 
+client.subscribe(['sensor', 'Pompa'], (err) => {
+    if (!err) {
+        console.log('Subscribed to multiple topics');
+    }
+});
+
 // Event: When a message is received
-client.on('message', (topic, message) => {
+client.on('message', async (topic, message) => {
     console.log(`Message received on topic "${topic}": ${message.toString()}`);
+
+    if (topic === 'Pompa') {
+        try {
+            const payload = JSON.parse(message.toString()); 
+            const { device_key, status } = payload;  
+            const isOn = status === 'ON'; 
+            await DeviceService.updateDeviceStatus(device_key, isOn);
+        } catch (error) {
+            console.error('Failed to update device status:', error);
+        }
+    }
 });
 
 // Handle connection errors

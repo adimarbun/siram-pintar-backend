@@ -2,7 +2,6 @@ const AuthService = require('../services/authService');
 
 const AuthController = {
   async register(req, res) {
-    console.log("MAsukkkkk =======")
     try {
       const { email, name, password } = req.body;
       const user = await AuthService.register(email, name, password);

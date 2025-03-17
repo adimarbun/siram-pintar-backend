@@ -4,7 +4,7 @@ const DeviceService = {
   async createDevice(plant_id, device_name, device_type) {
     return await DeviceModel.createDevice(plant_id, device_name, device_type);
   },
-
+  
   async getDevicesByPlant(plant_id) {
     return await DeviceModel.getDevicesByPlant(plant_id);
   },
@@ -15,6 +15,10 @@ const DeviceService = {
 
   async updateDevice(device_id, device_name, device_type) {
     return await DeviceModel.updateDevice(device_id, device_name, device_type);
+  },
+
+  async updateDeviceStatus(device_key,is_on){
+    return await DeviceModel.updateDeviceStatus(device_key,is_on);
   },
 
   async deleteDevice(device_id) {
