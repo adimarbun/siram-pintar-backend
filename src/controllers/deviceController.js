@@ -82,6 +82,51 @@ const DeviceController = {
     } catch (error) {
       responseHelper.error(res, error.message, 400);
     }
+  },
+
+  async generateSensorHistory(req, res) {
+    try {
+      const { id: deviceId } = req.params;
+      const filter = req.query.filter || '1 Hari';
+  
+      // Di dunia nyata, bisa validasi deviceId di DB
+      const data = await DeviceController._mockSensorHistory(filter);
+  
+      responseHelper.success(res, 'Berhasil mengambil data histori sensor.', {
+        deviceId,
+        filter,
+        data,
+      });
+    } catch (error) {
+      responseHelper.error(res, error.message, 500);
+    }
+  },
+
+  async _mockSensorHistory(filter) {
+    const now = new Date();
+    let data = [];
+    let totalPoints = 24;
+
+    if (filter === '7d') totalPoints = 7;
+    else if (filter === '1m') totalPoints = 30;
+    else if (filter === '1y') totalPoints = 12;
+
+    for (let i = 0; i < totalPoints; i++) {
+      const timestamp = new Date(now);
+      if (filter === '1 Hari') {
+        timestamp.setHours(now.getHours() - (totalPoints - i));
+      } else {
+        timestamp.setDate(now.getDate() - (totalPoints - i));
+      }
+
+      const value = Math.floor(Math.random() * 60) + 20; // range 20–80
+      data.push({
+        timestamp: timestamp.toISOString(),
+        value,
+      });
+    }
+
+    return data;
   }
 };
 

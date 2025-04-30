@@ -11,4 +11,5 @@ router.get('/:id', authMiddleware, DeviceController.getDeviceById);
 router.put('/:id', authMiddleware, DeviceController.updateDevice);
 router.delete('/:id', authMiddleware, DeviceController.deleteDevice);
 
+
 module.exports = router;
