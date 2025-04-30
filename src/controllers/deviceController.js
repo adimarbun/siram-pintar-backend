@@ -49,7 +49,6 @@ const DeviceController = {
 
       responseHelper.success(res, 'Data device berhasil diambil.', device);
     } catch (error) {
-      console.log("err")
       responseHelper.error(res, error.message, 500);
     }
   },
