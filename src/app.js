@@ -23,7 +23,7 @@ app.use('/api/device', deviceRoutes);
 app.use('/api/schedule', scheduleRoutes);
 
 app.get('/',(req,res) =>{
-  res.send("Siram Pintar Backend Run")
+  res.send("Siram Pintar Backend Run v2")
 })
 
 
