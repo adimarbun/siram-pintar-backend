@@ -66,7 +66,7 @@ class DynamicCronManager {
     const endTime = startTime + duration * 1000; // Durasi dalam milidetik
 
     console.log(`Memulai pengecekan kelembapan untuk keyId: ${device_id}, threshold: ${threshold}, duration: ${duration}s`);
-
+    this.setDeviceOn(device_id)
     while (Date.now() < endTime) {
       try {
         const moisture = mqttService.getMoistureByKeyId(device_id);
@@ -103,6 +103,21 @@ class DynamicCronManager {
       console.log("setDeviceOff",err)
     } 
   }
+
+  async setDeviceOn(device_id){
+    try{
+        let device =  await DeviceModel.getDeviceById(device_id);
+        await DeviceModel.updateDeviceStatus(device.device_key, false);
+        const payload = JSON.stringify({
+          device_key: device.device_key,
+          status: 'ON'
+        });
+        mqttService.publishToTopic('Pompa', payload);
+    }catch(err){
+      console.log("setDeviceOn",err)
+    } 
+  }
+
 }
 
 module.exports = new DynamicCronManager();
