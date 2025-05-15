@@ -11,6 +11,9 @@ router.get('', ScheduleController.getAll);
 // Route to get a schedule by ID
 router.get('/:id', ScheduleController.getById);
 
+// Route to get a schedule by device ID
+router.get('/device/:id', ScheduleController.getSchedulesByDeviceId);
+
 // Route to update a schedule by ID
 router.put('/:id', ScheduleController.update);
 

@@ -1,23 +1,55 @@
 const ScheduleModel = require('../models/scheduleModel');
+const DynamicCronManager = require('../services/cronService'); 
 
 class ScheduleService {
-  // Create a new schedule
   static async create(scheduleData) {
-    const { schedule, frequency, day_of_month, once_on_date, watering_time } = scheduleData;
+  const {
+    schedule: schedule_type,
+    frequency,
+    day_of_month,
+    day_of_week, 
+    watering_time,
+    device_id,
+    duration,
+    threshold
+  } = scheduleData;
 
-    try {
-      // Map user input to cron-like expression with dynamic time
-      const cronExpression = this.mapToCron(schedule, frequency, day_of_month, once_on_date, watering_time);
+  try {
+    const days_of_week = day_of_week !== undefined ? [day_of_week] : [];
 
-      const dataToSave = { ...scheduleData, schedule: cronExpression };
+    const cronExpression = this.mapToCron(
+      schedule_type,
+      frequency,
+      day_of_month,
+      once_on_date,
+      days_of_week,
+      watering_time
+    );
 
-      return await ScheduleModel.create(dataToSave);
-    } catch (error) {
-      throw new Error(`Failed to create schedule: ${error.message}`);
-    }
+    const dataToSave = {
+      ...scheduleData,
+      schedule: cronExpression,
+      schedule_type: frequency,
+    };
+
+    const newSchedule = await ScheduleModel.create(dataToSave);
+
+    DynamicCronManager.addJob(
+      newSchedule.device_id.toString(),  
+      newSchedule.schedule,
+      'checkMoisture',                    
+      newSchedule.device_id,
+      newSchedule.duration,
+      newSchedule.threshold
+    );
+
+    return newSchedule;
+
+  } catch (error) {
+    throw new Error(`Failed to create schedule: ${error.message}`);
   }
+}
 
-  // Retrieve all schedules
   static async getAll() {
     try {
       return await ScheduleModel.getAll();
@@ -26,7 +58,15 @@ class ScheduleService {
     }
   }
 
-  // Retrieve a schedule by ID
+  static async getSchedulesByDeviceId(deviceId) {
+    try {
+      const schedules = await ScheduleModel.getByDeviceId(deviceId);
+      return schedules;
+    } catch (error) {
+      throw new Error('Gagal mengambil jadwal berdasarkan device_id');
+    }
+  }
+
   static async getById(id) {
     try {
       return await ScheduleModel.getById(id);
@@ -35,7 +75,6 @@ class ScheduleService {
     }
   }
 
-  // Update a schedule by ID
   static async update(id, scheduleData) {
     try {
       return await ScheduleModel.update(id, scheduleData);
@@ -44,7 +83,6 @@ class ScheduleService {
     }
   }
 
-  // Delete a schedule by ID
   static async delete(id) {
     try {
       return await ScheduleModel.delete(id);
@@ -53,30 +91,51 @@ class ScheduleService {
     }
   }
 
-  static mapToCron(schedule, frequency, day_of_month, once_on_date, watering_time) {
-    // Parsing watering_time (misalnya "05:05")
-    const [hour, minute] = watering_time.split(':');
+  static mapToCron(scheduleType, frequency, dayOfMonth, onceOnDate, daysOfWeek, wateringTime) {
+    const [hour, minute] = wateringTime.split(':').map(Number);
 
-    switch (schedule) {
-      case 'everyday':
-        return `${minute} ${hour} * * *`; // Setiap hari pada jam 05:05
-      case 'weekly':
-        return `${minute} ${hour} * * 1`; // Setiap Senin pada jam 05:05
-      case 'monthly':
-        return `${minute} ${hour} ${day_of_month || 1} * *`; // Setiap tanggal tertentu dalam bulan pada jam 05:05
+    switch (scheduleType) {
       case 'once':
-        if (once_on_date) {
-          // Jika schedule = once, gunakan watering_time untuk menentukan jam dan menit
-          const date = new Date(once_on_date);
-          return `${minute} ${hour} ${date.getDate()} ${date.getMonth() + 1} *`; // Tanggal spesifik dengan waktu dari watering_time
+        if (!onceOnDate) throw new Error('Tanggal harus diisi untuk jadwal sekali');
+        const date = new Date(onceOnDate);
+        return `${minute} ${hour} ${date.getDate()} ${date.getMonth() + 1} *`;
+
+      case 'daily':
+        return `${minute} ${hour} * * *`;
+
+      case 'weekly':
+        if (!daysOfWeek || daysOfWeek.length === 0)
+          throw new Error('Hari dalam seminggu harus diisi');
+
+        let dow;
+        if (typeof daysOfWeek[0] === 'number') {
+          dow = daysOfWeek[0]; 
+        } else {
+          const cronDays = {
+            sunday: 0,
+            monday: 1,
+            tuesday: 2,
+            wednesday: 3,
+            thursday: 4,
+            friday: 5,
+            saturday: 6,
+          };
+          dow = cronDays[daysOfWeek[0].toLowerCase()];
+          if (dow === undefined) {
+            throw new Error('Hari dalam seminggu tidak valid');
+          }
         }
-        throw new Error('Invalid once_on_date for "once" schedule.');
+
+        return `${minute} ${hour} * * ${dow}`;
+
+      case 'monthly':
+        if (!dayOfMonth) throw new Error('Tanggal dalam bulan harus diisi');
+        return `${minute} ${hour} ${dayOfMonth} * *`;
+
       default:
-        throw new Error(`Unknown schedule type: ${schedule}`);
+        throw new Error('Jenis jadwal tidak valid');
     }
   }
-
-
 }
 
 module.exports = ScheduleService;

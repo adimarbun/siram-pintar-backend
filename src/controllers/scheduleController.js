@@ -84,6 +84,24 @@ class ScheduleController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  static async getSchedulesByDeviceId(req, res) {
+    const {id} = req.params;
+
+    try {
+      console.log("cek",id)
+      const schedules = await ScheduleService.getSchedulesByDeviceId(id);
+      res.status(200).json({
+        success: true,
+        data: schedules,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
 }
 
 module.exports = ScheduleController;

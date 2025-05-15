@@ -8,6 +8,7 @@ const deviceRoutes = require('./routes/deviceRoutes')
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const DynamicCronManager = require('./services/cronService');
 // const ScheduleService = require('./services/scheduleService')
+const historyRoutes = require('./routes/historyRoutes');
 const mqttService = require('./services/mqttService')
 
 
@@ -21,6 +22,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/plant', plantRoutes);
 app.use('/api/device', deviceRoutes);
 app.use('/api/schedule', scheduleRoutes);
+app.use('/api/history', historyRoutes);
 
 app.get('/',(req,res) =>{
   res.send("Siram Pintar Backend Run")

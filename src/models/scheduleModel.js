@@ -13,13 +13,16 @@ class ScheduleModel {
       watering_time,
       duration,
       schedule,
+      schedule_type,
       frequency,
       day_of_month,
       once_on_date,
+      day_of_week,
       moisture_threshold,
+      moisture_operator,
       active,
     } = scheduleData;
-
+  
     const query = `
       INSERT INTO schedules (
         plant_id, 
@@ -27,31 +30,35 @@ class ScheduleModel {
         watering_time, 
         duration, 
         schedule, 
+        schedule_type,
         frequency, 
         day_of_month, 
         once_on_date, 
+        day_of_week,
         moisture_threshold, 
-        created_at, 
-        updated_at, 
+        moisture_operator,
         active
       ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), $10) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
       RETURNING *;
     `;
-
+  
     const values = [
       plant_id,
       device_id,
       watering_time,
       duration,
       schedule,
+      schedule_type,
       frequency,
       day_of_month,
       once_on_date,
+      day_of_week,
       moisture_threshold,
-      active,
+      moisture_operator,
+      active ?? true, // default true jika undefined
     ];
-
+  
     try {
       const result = await db.query(query, values);
       return result.rows[0];
@@ -60,6 +67,7 @@ class ScheduleModel {
       throw error;
     }
   }
+  
 
   /**
    * Mengambil semua jadwal dari database.
@@ -168,6 +176,24 @@ class ScheduleModel {
       throw error;
     }
   }
+
+    /**
+   * Mengambil semua jadwal berdasarkan device_id.
+   * @param {Number} deviceId - ID perangkat.
+   * @returns {Array} Daftar jadwal untuk device tersebut.
+   */
+  static async getByDeviceId(deviceId) {
+    const query = 'SELECT * FROM schedules WHERE device_id = $1;';
+    console.log("cekk",query,deviceId)
+    try {
+      const result = await db.query(query, [deviceId]);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching schedules by device ID:', error.message);
+      throw error;
+    }
+  }
+
 }
 
 module.exports = ScheduleModel;
