@@ -94,14 +94,13 @@ class DynamicCronManager {
         await DeviceModel.updateDeviceStatus(device.device_key, false);
         const payload = JSON.stringify({
           device_key: device.device_key,
-          value: 'off'
+          status: 'OFF'
         });
-        mqttService.publishToTopic('sensor-off', payload);
+        mqttService.publishToTopic('Pompa', payload);
     }catch(err){
       console.log("setDeviceOff",err)
     } 
   }
-
 }
 
 module.exports = new DynamicCronManager();
