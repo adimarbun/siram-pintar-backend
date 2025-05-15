@@ -28,6 +28,8 @@ class DynamicCronManager {
     this.jobs[name] = cron.schedule(schedule, async () => {
       console.log(`Task "${name}" dijalankan pada ${new Date().toLocaleString()}`);
       await this.runTask(task,device_id,duration,threshold);
+    }, {
+      timezone: 'Asia/Jakarta'
     });
 
     console.log(`Cron job "${name}" ditambahkan dengan jadwal: ${schedule}`);

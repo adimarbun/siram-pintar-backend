@@ -25,7 +25,7 @@ app.use('/api/schedule', scheduleRoutes);
 app.use('/api/history', historyRoutes);
 
 app.get('/',(req,res) =>{
-  res.send("Siram Pintar Backend Run v2")
+  res.send("Siram Pintar Backend Run v3 15/05/25 19:30")
 })
 
 
