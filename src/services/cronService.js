@@ -93,7 +93,7 @@ class DynamicCronManager {
   async setDeviceOff(device_id){
     try{
         let device =  await DeviceModel.getDeviceById(device_id);
-        await DeviceModel.updateDeviceStatus(device.device_key, false);
+        await DeviceModel.updateDeviceStatus(device.device_key, true);
         const payload = JSON.stringify({
           device_key: device.device_key,
           status: 'OFF'
