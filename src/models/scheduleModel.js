@@ -184,7 +184,6 @@ class ScheduleModel {
    */
   static async getByDeviceId(deviceId) {
     const query = 'SELECT * FROM schedules WHERE device_id = $1;';
-    console.log("cekk",query,deviceId)
     try {
       const result = await db.query(query, [deviceId]);
       return result.rows;

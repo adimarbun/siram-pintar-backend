@@ -4,6 +4,7 @@ const axios = require('axios'); // Untuk mengambil data sensor
 const mqttService = require('./mqttService');
 const ScheduleModel = require('../models/scheduleModel');
 const { duration } = require('moment');
+const DeviceModel = require('../models/deviceModel');
 
 class DynamicCronManager {
   constructor() {
@@ -13,7 +14,7 @@ class DynamicCronManager {
   async loadJobsFromDB() {
     const jobs = await ScheduleModel.getAll();
     jobs.forEach((job) => {
-      this.addJob(job.device_id, job.schedule, 'siram1', job.device_id,job.duration,job.threshold);
+      this.addJob(job.id, job.schedule, 'checkMoisture', job.device_id,job.duration,job.threshold);
     });
     console.log('Cron jobs telah dimuat dari database.');
   }
@@ -37,11 +38,11 @@ class DynamicCronManager {
   }
 
   async removeJob(name) {
+     console.log(`job :"${this.jobs[name]}" `)
     if (this.jobs[name]) {
       this.jobs[name].stop();
       delete this.jobs[name];
     }
-    await CronModel.deactivateJob(name);
   }
 
   listJobs() {
@@ -83,9 +84,24 @@ class DynamicCronManager {
         return;
       }
     }
-
     console.log('Proses selesai setelah mencapai durasi maksimum.');
+    this.setDeviceOff(device_id)
   }
+
+  async setDeviceOff(device_id){
+    try{
+        let device =  await DeviceModel.getDeviceById(device_id);
+        await DeviceModel.updateDeviceStatus(device.device_key, false);
+        const payload = JSON.stringify({
+          device_key: device.device_key,
+          value: 'off'
+        });
+        mqttService.publishToTopic('sensor-off', payload);
+    }catch(err){
+      console.log("setDeviceOff",err)
+    } 
+  }
+
 }
 
 module.exports = new DynamicCronManager();

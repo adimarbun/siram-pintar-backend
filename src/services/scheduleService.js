@@ -11,10 +11,12 @@ class ScheduleService {
     watering_time,
     device_id,
     duration,
-    threshold
+    threshold,
+    once_on_date
   } = scheduleData;
 
   try {
+    console.log("cekk",scheduleData)
     const days_of_week = day_of_week !== undefined ? [day_of_week] : [];
 
     const cronExpression = this.mapToCron(
@@ -35,7 +37,7 @@ class ScheduleService {
     const newSchedule = await ScheduleModel.create(dataToSave);
 
     DynamicCronManager.addJob(
-      newSchedule.device_id.toString(),  
+      newSchedule.id,  
       newSchedule.schedule,
       'checkMoisture',                    
       newSchedule.device_id,
@@ -85,7 +87,14 @@ class ScheduleService {
 
   static async delete(id) {
     try {
-      return await ScheduleModel.delete(id);
+      const schedule = await ScheduleModel.getById(id);
+      if (!schedule) throw new Error('Schedule not found');
+
+      const result = await ScheduleModel.delete(id);
+
+      DynamicCronManager.removeJob(schedule.id);
+
+      return result;
     } catch (error) {
       throw new Error(`Failed to delete schedule: ${error.message}`);
     }
