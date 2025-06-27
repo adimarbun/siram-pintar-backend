@@ -71,9 +71,13 @@ const DeviceModel = {
     return result.rows[0]; 
   },
 
-
   async deleteDevice(device_id) {
     const result = await db.query('DELETE FROM devices WHERE id = $1 RETURNING *', [device_id]);
+    return result.rows[0];
+  },
+
+  async getDeviceByKey(device_key) {
+    const result = await db.query('SELECT * FROM devices WHERE device_key = $1', [device_key]);
     return result.rows[0];
   }
 };

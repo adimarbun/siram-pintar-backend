@@ -49,6 +49,35 @@ const HistoryController = {
       console.error('Error creating history:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
+  },
+
+  async getByDeviceAndDateRange(req, res) {
+    const { deviceId } = req.params;
+    const { startDate, endDate } = req.query;
+    if (!deviceId || !startDate || !endDate) {
+      return res.status(400).json({ message: 'deviceId, startDate, and endDate are required' });
+    }
+    try {
+      // Get device info
+      const DeviceModel = require('../models/deviceModel');
+      const device = await DeviceModel.getDeviceById(deviceId);
+      if (!device) {
+        return res.status(404).json({ message: 'Device not found' });
+      }
+      const histories = await HistoryService.getHistoriesByDeviceAndDateRange(deviceId, startDate, endDate);
+      const data = histories.map(h => ({
+        tanggal: h.timestamp,
+        value: h.value
+      }));
+      res.json({
+        device_id: device.id,
+        device_name: device.device_name,
+        data
+      });
+    } catch (error) {
+      console.error('Error fetching histories by date range:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
   }
 };
 

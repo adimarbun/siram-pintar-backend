@@ -34,6 +34,10 @@ const HistoryService = {
 
   async createHistory(deviceId, timestamp, value) {
     return await HistoryModel.createHistory(deviceId, timestamp, value);
+  },
+
+  async getHistoriesByDeviceAndDateRange(deviceId, startDate, endDate) {
+    return await HistoryModel.getHistoriesByDeviceAndDateRange(deviceId, startDate, endDate);
   }
 };
 

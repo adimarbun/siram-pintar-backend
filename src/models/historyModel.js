@@ -56,6 +56,16 @@ const HistoryModel = {
     const result = await db.query(query, [device_id]);
     return result.rowCount > 0;
   },
+
+  async getHistoriesByDeviceAndDateRange(device_id, startDate, endDate) {
+    const query = `
+      SELECT * FROM sensor_histories 
+      WHERE device_id = $1 AND timestamp >= $2 AND timestamp <= $3
+      ORDER BY timestamp DESC;
+    `;
+    const result = await db.query(query, [device_id, startDate, endDate]);
+    return result.rows;
+  },
 };
 
 module.exports = HistoryModel;
