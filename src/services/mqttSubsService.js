@@ -24,7 +24,7 @@ client.on("connect", () => {
   client.publish("home/garden/sensor", "Hello MQTT");
 });
 
-client.subscribe(["Sensor", "Pompa", "Sensor/Log"], (err) => {
+client.subscribe(["Sensor", "Pompa", "sensorlog"], (err) => {
   if (!err) {
     console.log("Subscribed to multiple topics");
   }
@@ -50,27 +50,28 @@ client.on("message", async (topic, message) => {
       console.error("Failed to update device status:", error);
     }
   }
-  if (topic === "Sensor/Log") {
+  if (topic === "sensorlog") {
     try {
       const payload = JSON.parse(message.toString());
-      const sensors = [payload.moisture1, payload.moisture2, payload.ph];
-      for (const sensor of sensors) {
-        if (!sensor || !sensor.device_key) continue;
+      
+      // Handle single sensor reading format
+      if (payload.device_key && payload.value !== undefined) {
         try {
-          const device = await DeviceModel.getDeviceByKey(sensor.device_key);
+          const device = await DeviceModel.getDeviceByKey(payload.device_key);
           if (!device) {
-            console.error(`Device not found for key: ${sensor.device_key}`);
-            continue;
+            console.error(`Device not found for key: ${payload.device_key}`);
+            return;
           }
-          let value = sensor.value;
+          
+          let value = payload.value;
           // Jika device_key mengandung 'ph', pastikan value float
-          if (sensor.device_key.toLowerCase().includes('ph')) {
-            value = parseFloat(sensor.value);
+          if (payload.device_key.toLowerCase().includes('ph')) {
+            value = parseFloat(payload.value);
           }
+          
           await HistoryModel.createHistory(device.id, new Date(), value);
-          console.log(`History saved for device_key: ${sensor.device_key}, value: ${value}`);
         } catch (err) {
-          console.error(`Failed to save history for device_key: ${sensor.device_key}`, err);
+          console.error(`Failed to save history for device_key: ${payload.device_key}`, err);
         }
       }
     } catch (error) {
