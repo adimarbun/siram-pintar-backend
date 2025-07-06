@@ -88,46 +88,72 @@ const DeviceController = {
   async generateSensorHistory(req, res) {
     try {
       const { id: deviceId } = req.params;
-      const filter = req.query.filter || '1 Hari';
-  
-      // Di dunia nyata, bisa validasi deviceId di DB
-      const data = await DeviceController._mockSensorHistory(filter);
-  
+      const { startDate, endDate } = req.query;
+      
+      // Validasi format tanggal
+      const isValidDate = d => d && !isNaN(new Date(d).getTime()) && /^\d{4}-\d{2}-\d{2}$/.test(d);
+      if (!isValidDate(startDate) || !isValidDate(endDate)) {
+        return responseHelper.error(res, 'startDate dan endDate harus format YYYY-MM-DD', 400);
+      }
+      
+      // Validasi device exists
+      const device = await DeviceService.getDeviceById(deviceId);
+      if (!device) {
+        return responseHelper.error(res, 'Device tidak ditemukan', 404);
+      }
+
+      // Ambil data dari database
+      const HistoryService = require('../services/historyService');
+      const allHistories = await HistoryService.getHistoriesByDeviceAndDateRange(deviceId, startDate, endDate);
+      
+      // Ambil sample 10 data untuk grafik yang jelas
+      const sampleData = DeviceController._getSampleData(allHistories, 10);
+      
       responseHelper.success(res, 'Berhasil mengambil data histori sensor.', {
         deviceId,
-        filter,
-        data,
+        deviceName: device.device_name,
+        startDate,
+        endDate,
+        totalRecords: allHistories.length,
+        sampleSize: sampleData.length,
+        data: sampleData,
       });
     } catch (error) {
+      console.error('Error generating sensor history:', error);
       responseHelper.error(res, error.message, 500);
     }
   },
 
-  async _mockSensorHistory(filter) {
-    const now = new Date();
-    let data = [];
-    let totalPoints = 24;
-
-    if (filter === '7d') totalPoints = 7;
-    else if (filter === '1m') totalPoints = 30;
-    else if (filter === '1y') totalPoints = 12;
-
-    for (let i = 0; i < totalPoints; i++) {
-      const timestamp = new Date(now);
-      if (filter === '1 Hari') {
-        timestamp.setHours(now.getHours() - (totalPoints - i));
-      } else {
-        timestamp.setDate(now.getDate() - (totalPoints - i));
-      }
-
-      const value = Math.floor(Math.random() * 60) + 20; // range 20–80
-      data.push({
-        timestamp: timestamp.toISOString(),
-        value,
-      });
+  _getSampleData(histories, sampleSize) {
+    console.log(`🔍 Sampling ${sampleSize} data dari ${histories.length} total records`);
+    
+    if (histories.length <= sampleSize) {
+      console.log(`📊 Data kurang dari ${sampleSize}, ambil semua data`);
+      return histories.map(h => ({
+        timestamp: h.timestamp,
+        value: h.value
+      }));
     }
 
-    return data;
+    // Ambil sample yang merata dari seluruh data
+    const step = Math.floor(histories.length / sampleSize);
+    const sampleData = [];
+    
+    console.log(`📏 Step size: ${step} (${histories.length} / ${sampleSize})`);
+    
+    for (let i = 0; i < sampleSize; i++) {
+      const index = i * step;
+      if (index < histories.length) {
+        const history = histories[index];
+        sampleData.push({
+          timestamp: history.timestamp,
+          value: history.value
+        });
+      }
+    }
+
+    console.log(`✅ Berhasil mengambil ${sampleData.length} sample data`);
+    return sampleData;
   }
 };
 
